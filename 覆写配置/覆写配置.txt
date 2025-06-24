@@ -1,0 +1,304 @@
+# ==全局配置==
+port: 7890
+socks-port: 7891
+redir-port: 7892
+mixed-port: 7893
+tproxy-port: 7894
+ipv6: true
+#统一延迟和TCP并发
+unified-delay: true
+tcp-concurrent: true
+#允许局域网
+allow-lan: false
+#全局 TLS 指纹
+global-client-fingerprint: chrome
+#规则代理 此项拥有默认值，默认为规则模式 
+mode: rule
+#ip节点缓存 记住选择的节点
+profile:
+  store-selected: true
+  # 储存 API 对策略组的选择，以供下次启动时使用
+  store-fake-ip: true
+  # 储存 fakeip 映射表，域名再次发生连接时，使用原有映射地址  
+
+# ==域名嗅探== 嗅探 消耗设备性能 用处不大
+sniffer:
+  enable: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  #强制嗅探
+  force-domain:
+    #- "+.v2ex.com"
+  #忽略嗅探
+  skip-domain:
+    - "+.baidu.com"
+
+# ==入站==   
+tun:
+  enable: true
+  stack: mixed   # system/gvisor/mixed
+  dns-hijack: ["any:53", "tcp://any:53"]
+  auto-route: true
+  #auto-redirect: true
+  auto-detect-interface: true
+
+# ==DNS设置==
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  ipv6: false
+  respect-rules: true #dns 连接遵守路由规则，需配置 proxy-server-nameserver
+  enhanced-mode: fake-ip # 模式切换 redir-host / fake-ip
+  #fake-ip-range: 28.0.0.1/8  # 某些 DNS 不识别 198 段 / Android 出现 DNS 无返回	
+  fake-ip-range: 198.18.0.0/15
+  #模式切换 whitelist/blacklist , 默认blacklist
+  #blacklist:如果匹配成功则不返回 fake-ip, whitelist即只有匹配成功才返回 fake-ip
+  fake-ip-filter-mode: blacklist
+  fake-ip-filter:
+    - "+.lan"
+    - "+.local"
+    - "+.msftconnecttest.com"
+    - "+.msftncsi.com"
+    - "localhost.ptlogin2.qq.com"
+    - "time.*"
+    - "api.weixin.qq.com" 
+    - "+.apple.com"
+    - "+.icloud.com"
+    - "+.itunes.apple.com"
+    - "connect.rom.miui.com" # 小米服务
+    - "ntp.*"   # 时间服务器
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  proxy-server-nameserver:
+    - https://cloudflare-dns.com/dns-query
+    - https://dns.google/dns-query
+    - https://223.5.5.5/dns-query
+  # namesever尽量用运营商提供的DNS
+  nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+
+# 规则集
+rule-anchor:
+  ip: &ip {type: http, interval: 86400, behavior: ipcidr, format: mrs}
+  domain: &domain {type: http, interval: 86400, behavior: domain, format: mrs}
+  class: &class {type: http, interval: 86400, behavior: classical, format: text}
+  
+rule-providers: 
+  private_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs"}
+  proxylite: { <<: *class, url: "https://raw.githubusercontent.com/qichiyuhub/rule/refs/heads/main/proxy.list"}
+  ai: {  <<: *domain, url: "https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/category-ai-!cn.mrs" }
+
+  cn_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs"}
+  google_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs"}
+  github_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs"}
+  youtube_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs"}
+  tiktok_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs"}
+  telegram_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs"}
+  netflix_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs"}
+  paypal_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/paypal.mrs"}
+  microsoft_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs"}
+  steam_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam.mrs"}
+
+  #中国大陆的防火墙屏蔽的网站
+  gfw_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/gfw.mrs"}
+  #指除中国大陆以外的其他国家和地区
+  geolocation-!cn: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs"}
+  china_media: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-media-cn.mrs" }
+
+  cn_ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs"}
+  google_ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/google.mrs"}
+  telegram_ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.mrs"}
+  netflix_ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/netflix.mrs"}
+  
+  #广告
+ # adblock_domain: { <<: *domain, url: "https://raw.githubusercontent.com/REIJI007/AdBlock_Rule_For_Clash/main/adblock_reject.mrs"}
+  adblock_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads-all.mrs"}
+
+pr: &pr 
+  - 自动选择
+  - 节点选择
+  - 全部节点
+  - 香港自动
+  - 新加坡自动
+  - 日本自动
+  - 美国自动
+  - 小众自动
+  - 国内直连
+proxy-groups:
+
+  - name: 节点选择
+    type: select
+    icon: "https://img.icons8.com/?size=100&id=ooUU44cZMaFE&format=png&color=000000"
+    exclude-filter: (?i)GB|Traffic|Expire|Premium|频道|订阅|ISP|流量|到期|过期|套餐|重置|官网|落地|http|关注|群组
+    proxies:
+      - 自动选择
+      - 全部节点
+      - 香港自动
+      - 新加坡自动
+      - 日本自动
+      - 美国自动
+      - 小众自动
+
+  - name: 自动选择
+    type: url-test
+    icon: https://raw.githubusercontent.com/Vbaethon/HOMOMIX/main/Icon/Color/Large/Auto_Link.png
+    tolerance: 70
+    interval: 300
+    include-all: true
+    exclude-filter: (?i)GB|Traffic|Expire|Premium|频道|订阅|ISP|流量|到期|过期|套餐|重置|官网|落地|http|关注|群组
+
+  - name: 全部节点
+    type: select
+    include-all: true
+    icon: "https://raw.githubusercontent.com/Vbaethon/HOMOMIX/main/Icon/Color/Large/Global.png"
+    exclude-filter: (?i)GB|Traffic|Expire|Premium|频道|订阅|ISP|流量|到期|过期|套餐|重置|官网|落地|http|关注|群组
+
+  - name: Emby
+    type: select
+    proxies: *pr
+    icon: "https://img.icons8.com/?size=100&id=FHnoYAFmyvu0&format=png&color=000000"
+
+
+  - name: 国外媒体
+    type: select
+    proxies: *pr
+    icon: https://img.icons8.com/?size=100&id=F2R6V3ECtTmF&format=png&color=000000
+
+  - name: Google
+    type: select
+    proxies: *pr
+    icon: https://img.icons8.com/?size=100&id=17949&format=png&color=000000
+
+  - name: Telegram
+    type: select
+    proxies: *pr
+    icon: https://img.icons8.com/?size=100&id=63306&format=png&color=000000
+
+  - name: ChatGPT
+    type: select
+    proxies: *pr
+    icon: https://img.icons8.com/?size=100&id=FBO05Dys9QCg&format=png&color=000000
+
+  - name: Microsoft
+    type: select
+    proxies: *pr
+    icon: https://img.icons8.com/?size=100&id=22989&format=png&color=000000
+
+  - name: PayPal
+    type: select
+    proxies: *pr
+    icon: https://img.icons8.com/?size=100&id=13611&format=png&color=000000
+
+  - name: 香港自动
+    type: url-test
+    include-all: true
+    filter: "(?i)港|hk|hongkong|hong kong"
+    icon: https://img.icons8.com/?size=100&id=WQgynbTLjuXX&format=png&color=000000
+
+  - name: 新加坡自动
+    type: url-test
+    include-all: true
+    filter: "(?i)(新加坡|狮城|sg|singapore)"
+    icon: https://img.icons8.com/?size=100&id=8H-8FMObN4vB&format=png&color=000000
+
+  - name: 日本自动
+    type: url-test
+    include-all: true
+    filter: "(?i)日|jp|japan"
+    icon: https://img.icons8.com/?size=100&id=McQbrq9qaQye&format=png&color=000000
+
+  - name: 美国自动
+    type: url-test
+    include-all: true
+    filter: "(?i)美|美国|us|usa|unitedstates|united states|洛杉|俄亥俄"
+    icon: https://img.icons8.com/?size=100&id=aRiu1GGi6Aoe&format=png&color=000000
+
+  - name: 小众自动
+    type: url-test
+    include-all: true
+    exclude-filter: (?i)GB|频道|订阅|流量|到期|过期|套餐|重置|官网|落地|http|关注|群组
+    filter: "(?i)^(?!.*(港|hk|hongkong|hong kong|新加坡|sg|singapore|日|jp|japan|美|美国|us|usa|unitedstates|united states|洛杉|俄亥俄)).*"
+    icon: https://img.icons8.com/?size=100&id=44028&format=png&color=000000
+
+
+  - name: 国内媒体
+    type: select
+    proxies: 
+      - DIRECT
+      - REJECT
+    icon: https://img.icons8.com/?size=100&id=d5TXEddDPJaA&format=png&color=000000
+
+  - name: Adblock
+    type: select
+    proxies: 
+      - REJECT
+      - DIRECT
+    icon: https://raw.githubusercontent.com/Vbaethon/HOMOMIX/main/Icon/Color/Large/AdblockPlus_2.png
+
+  - name: 国内直连
+    type: select
+    proxies:
+      - DIRECT
+      - REJECT
+    icon: https://raw.githubusercontent.com/Vbaethon/HOMOMIX/main/Icon/Color/Large/DIRECT.png     
+
+# 规则匹配
+rules:
+  # 内网DIRECT
+  - RULE-SET,private_domain, DIRECT
+
+  # 广告拦截
+  - RULE-SET,adblock_domain,Adblock
+
+  # 特定服务域名（需精确代理的服务优先于通用规则）
+  - RULE-SET,ai,ChatGPT
+  - RULE-SET,github_domain,节点选择
+  - RULE-SET,youtube_domain,国外媒体
+  - RULE-SET,google_domain,Google
+  - RULE-SET,microsoft_domain,Microsoft
+  - RULE-SET,tiktok_domain,国外媒体
+  - RULE-SET,telegram_domain,Telegram
+  - RULE-SET,netflix_domain,国外媒体
+  - RULE-SET,paypal_domain,PayPal
+  - RULE-SET,steam_domain,节点选择
+
+  # Emby等端口优先识别
+  # - DST-PORT,443/8096,节点选择,no-resolve
+  - DOMAIN-KEYWORD,emby,Emby
+  - DOMAIN-SUFFIX,sfcj.org,Emby
+  - DOMAIN-SUFFIX,yezi.my,Emby
+  - DOMAIN-SUFFIX, xytx.org, Emby 
+  - DOMAIN-SUFFIX, rjf37.com, Emby
+  - DOMAIN-SUFFIX,meowfly.de,Emby
+  - DOMAIN-SUFFIX,ciallo.party,Emby
+  - DOMAIN-SUFFIX,tufei.de,Emby
+
+  # 通用代理域名（放在靠后避免覆盖特殊服务）和 GFW域名（兜底代理）
+  - RULE-SET,proxylite,节点选择
+  - RULE-SET,gfw_domain,节点选择
+
+  # 国内域名DIRECT（在代理规则后，避免国内服务被代理）
+  - RULE-SET,china_media,国内媒体
+  - RULE-SET,cn_domain,DIRECT
+
+  # 特定服务IP（需代理的IP规则）
+  - RULE-SET,google_ip,Google,no-resolve
+  - RULE-SET,netflix_ip,国外媒体,no-resolve
+  - RULE-SET,telegram_ip,Telegram,no-resolve
+
+  # 国内IPDIRECT（确保国内IP不被代理）
+  - RULE-SET,cn_ip,DIRECT
+
+  # 非国内IP代理（在DIRECT规则后）
+  - RULE-SET,geolocation-!cn,节点选择
+
+  # 最终兜底策略（必须最后）
+  - MATCH,节点选择
