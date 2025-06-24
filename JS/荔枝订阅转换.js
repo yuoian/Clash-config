@@ -326,6 +326,7 @@ function main(config) {
     // Emby 专属识别
     "DOMAIN-KEYWORD,emby,Emby",
     "DOMAIN-SUFFIX,xxx.xx,Emby",
+  
 
     // 通用代理 + GFW 域名兜底代理
     "RULE-SET,proxylite,节点选择",
