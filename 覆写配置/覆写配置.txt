@@ -273,13 +273,8 @@ rules:
   # Emby等端口优先识别
   # - DST-PORT,443/8096,节点选择,no-resolve
   - DOMAIN-KEYWORD,emby,Emby
-  - DOMAIN-SUFFIX,sfcj.org,Emby
-  - DOMAIN-SUFFIX,yezi.my,Emby
-  - DOMAIN-SUFFIX, xytx.org, Emby 
-  - DOMAIN-SUFFIX, rjf37.com, Emby
-  - DOMAIN-SUFFIX,meowfly.de,Emby
-  - DOMAIN-SUFFIX,ciallo.party,Emby
-  - DOMAIN-SUFFIX,tufei.de,Emby
+  - DOMAIN-SUFFIX,xxx.xx,Emby
+
 
   # 通用代理域名（放在靠后避免覆盖特殊服务）和 GFW域名（兜底代理）
   - RULE-SET,proxylite,节点选择
