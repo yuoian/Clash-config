@@ -1,0 +1,10 @@
+{
+	"name":"Lizhi", 
+	"description":"",  
+	"icons":
+		[
+			{"name":"CineTrail.png", "url":"https://raw.githubusercontent.com/yuoian/Clash-config/main/icons/Emby_icons/CineTrail.png"},
+			{"name":"YounoEmby.png", "url":"https://raw.githubusercontent.com/yuoian/Clash-config/main/icons/Emby_icons/YounoEmby.png"}
+
+		]
+}
