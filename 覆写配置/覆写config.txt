@@ -20,7 +20,7 @@ profile:
   # 储存 API 对策略组的选择，以供下次启动时使用
   store-fake-ip: true
   # 储存 fakeip 映射表，域名再次发生连接时，使用原有映射地址  
-
+ 
 # ==域名嗅探== 嗅探 消耗设备性能 用处不大
 sniffer:
   enable: true
